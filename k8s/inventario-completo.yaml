@@ -1,0 +1,248 @@
+# ======================
+# Namespace
+# ======================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: inventario-dev
+
+---
+# ======================
+# ConfigMap: MySQL
+# ======================
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: inventario-mysql-config
+  namespace: inventario-dev
+
+data:
+  MYSQL_DATABASE: inventario_db
+  MYSQL_HOST: inventario-mysql-service
+  MYSQL_PORT: "3306"
+  MYSQL_USER: root
+
+---
+# ======================
+# Secret
+# ======================
+apiVersion: v1
+kind: Secret
+metadata:
+  name: inventario-mysql-secret
+  namespace: inventario-dev
+
+type: Opaque
+
+data:
+  MYSQL_ROOT_PASSWORD: c2VjcmV0
+
+---
+# ======================
+# MySQL Service
+# ======================
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventario-mysql-service
+  namespace: inventario-dev
+
+spec:
+  clusterIP: None
+  selector:
+    app: mysql-inventario
+
+  ports:
+    - port: 3306
+      targetPort: 3306
+
+---
+# ======================
+# StatefulSet MySQL
+# ======================
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: inventario-mysql
+  namespace: inventario-dev
+
+spec:
+  serviceName: inventario-mysql-service
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: mysql-inventario
+
+  template:
+    metadata:
+      labels:
+        app: mysql-inventario
+
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+
+        ports:
+        - containerPort: 3306
+
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: inventario-mysql-secret
+              key: MYSQL_ROOT_PASSWORD
+
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: inventario-mysql-config
+              key: MYSQL_DATABASE
+
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-storage
+
+    spec:
+      storageClassName: ebs-sc
+      accessModes: ["ReadWriteOnce"]
+
+      resources:
+        requests:
+          storage: 1Gi
+
+---
+# ======================
+# Deployment App
+# ======================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventario-app-deployment
+  namespace: inventario-dev
+
+spec:
+  replicas: 2
+
+  strategy:
+    type: RollingUpdate
+
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+  selector:
+    matchLabels:
+      app: inventario-app
+
+  template:
+    metadata:
+      labels:
+        app: inventario-app
+
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "9091"
+
+    spec:
+      containers:
+      - name: inventario-app-container
+        image: katluv/inventario-productos:1.0.0
+
+        ports:
+        - containerPort: 8080
+        - containerPort: 9091
+
+        resources:
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: inventario-mysql-config
+              key: MYSQL_HOST
+
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: inventario-mysql-config
+              key: MYSQL_PORT
+
+        - name: DB_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: inventario-mysql-config
+              key: MYSQL_USER
+
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: inventario-mysql-secret
+              key: MYSQL_ROOT_PASSWORD
+
+        - name: DB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: inventario-mysql-config
+              key: MYSQL_DATABASE
+
+---
+# ======================
+# Service App
+# ======================
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventario-app-service
+  namespace: inventario-dev
+
+spec:
+  selector:
+    app: inventario-app
+
+  ports:
+    - port: 80
+      targetPort: 8080
+
+  type: ClusterIP
+
+---
+# ======================
+# Ingress
+# ======================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: inventario-app-ingress
+  namespace: inventario-dev
+
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+
+spec:
+  ingressClassName: nginx
+
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+
+        backend:
+          service:
+            name: inventario-app-service
+            port:
+              number: 80
