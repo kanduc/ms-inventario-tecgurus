@@ -6,7 +6,7 @@
 
     <groupId>net.tecgurus</groupId>
     <artifactId>inventario-productos</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>inventario-productos</name>
     <description>Microservicio Java para Inventario de Productos</description>
     <parent>
