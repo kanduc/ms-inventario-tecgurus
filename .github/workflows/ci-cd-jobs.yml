@@ -112,9 +112,9 @@ jobs:
     # =========================
     # Deploy manifests
     # =========================
-    - name: Deploy manifests
-      run: |
-        kubectl apply -f k8s/
+    #- name: Deploy manifests
+    #  run: |
+    #    kubectl apply -f k8s/
 
     # =========================
     # Actualizar imagen
