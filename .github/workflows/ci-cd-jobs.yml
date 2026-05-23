@@ -49,7 +49,7 @@ jobs:
     # Trivy Image Scan
     # =========================
     - name: Trivy Image Scan
-      uses: aquasecurity/trivy-action@0.36.0
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${IMAGE_TAG}
         format: table
@@ -62,7 +62,7 @@ jobs:
     # Trivy Filesystem Scan
     # =========================
     - name: Trivy Filesystem Scan
-      uses: aquasecurity/trivy-action@0.36.0
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
@@ -73,7 +73,7 @@ jobs:
     # Trivy Kubernetes Config Scan
     # =========================
     - name: Trivy Kubernetes Scan
-      uses: aquasecurity/trivy-action@0.36.0
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         scan-type: 'config'
         scan-ref: './k8s'
