@@ -5,3 +5,7 @@ variable "aws_region" {
 variable "cluster_name" {
   default = "inventario-eks"
 }
+
+variable "namespace" {
+  default = "inventario-prod"
+}
