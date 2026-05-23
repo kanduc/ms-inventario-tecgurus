@@ -1,7 +1,11 @@
 name: Terraform-EKS
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - feature/terraform-helm
+  #workflow_dispatch:
+
 
 jobs:
 
