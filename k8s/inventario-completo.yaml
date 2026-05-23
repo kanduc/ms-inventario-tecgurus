@@ -153,7 +153,7 @@ spec:
     spec:
       containers:
       - name: inventario-app-container
-        image: katluv/inventario-productos:1.0.0
+        image: 058006295553.dkr.ecr.us-east-1.amazonaws.com/inventario-app:latest
 
         ports:
         - containerPort: 8080
