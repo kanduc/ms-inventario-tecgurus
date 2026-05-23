@@ -51,7 +51,7 @@ jobs:
     - name: Trivy Image Scan
       uses: aquasecurity/trivy-action@v0.36.0
       with:
-        image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${IMAGE_TAG}
+        image-ref: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
         format: table
         exit-code: '1'
         ignore-unfixed: true
