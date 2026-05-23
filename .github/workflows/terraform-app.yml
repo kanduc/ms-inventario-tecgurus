@@ -1,10 +1,10 @@
 name: Terraform-Config-EKS
 
 on:
-  #push:
-  #  branches:
-  #    - feature/terraform-helm
-  workflow_dispatch:
+  push:
+    branches:
+      - feature/terraform
+  #workflow_dispatch:
 
 
 jobs:
